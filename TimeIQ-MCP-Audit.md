@@ -1,15 +1,16 @@
 # TimeIQ-MCP — Audit Report & Resolution Log
 
 Repo: [Tomi2k/timeiq-mcp](https://github.com/Tomi2k/timeiq-mcp)
-Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.3.0** am 29. Mai 2026)
-Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung sowie Setup-Assistent.
+Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.3.3** am 29. Mai 2026)
+Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung, Setup-Assistent sowie Slack-User-Mappen-Abstraktion (Email, Username, Slug, ID).
 
 ## TL;DR
-- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.3.0).
+- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.3.3).
 - Alle 12+ auditierte Schwachstellen, Logikfehler und README-Abweichungen wurden vollständig korrigiert.
 - **NEU in v1.3.0:** Ein vollständig interaktiver Setup-Assistent (CLI-Wizard) zur Abfrage und Einrichtung der Konfigurationsvariablen (inklusive Slack Admin-ID und Coworker-Mappings).
+- **NEU in v1.3.3:** Abstraktion der Slack-ID-Auflösung, sodass Mappings flexibel auf TimeIQ E-Mail-Adressen, Benutzernamen, Slugs oder numerische IDs verweisen können.
 - TypeScript baut ohne Warnungen und mit strikten Typprüfungen (`tsc --noEmit` sauber).
-- Das gesamte Test-Suite läuft fehlerfrei (**28 von 28 Tests grün**).
+- Das gesamte Test-Suite läuft fehlerfrei (**31 von 31 Tests grün**).
 - Der Server wurde im Produktivbetrieb unter stdio-Transport und als NPM-Paket erfolgreich validiert.
 
 ---
@@ -103,8 +104,8 @@ Um die Installation und Einrichtung des Slack User-Mappings so komfortabel wie m
 ## Verifikationsergebnisse & Tests
 Die Behebung aller Punkte wurde durch die bestehende und erweiterte Testsuite vollumfänglich validiert:
 - **Ausgeführter Befehl:** `npm run test`
-- **Resultat:** 28/28 Tests erfolgreich bestanden.
+- **Resultat:** 31/31 Tests erfolgreich bestanden.
   - `tests/slug.test.ts` (7 Tests) — **Grün**
   - `tests/changeset.test.ts` (5 Tests) — **Grün**
-  - `tests/slack.test.ts` (8 Tests) — **Grün**
+  - `tests/slack.test.ts` (11 Tests) — **Grün** (inklusive Tests für Email-, Username-, Slug- und ID-Mappen-Auflösung)
   - `tests/dates.test.ts` (8 Tests) — **Grün**
