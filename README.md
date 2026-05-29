@@ -24,6 +24,71 @@ A production-ready, fully anonymized **Model Context Protocol (MCP)** server for
 
 ---
 
+## 🤖 KI-Agenten-Kompatibilität & Abfrage-Beispiele
+
+### 🧠 Primär entwickelt für Hermes (Zweibot)
+Dieses MCP-Setup wurde **primär für die Arbeit mit dem Hermes-Zweibot** entwickelt. Auf dem VPS läuft es absolut einwandfrei und ermöglicht eine nahtlose Zeiterfassung und Projektverwaltung per Slack. 
+
+**Universelle MCP-Kompatibilität**: Da das System den standardisierten **Model Context Protocol (MCP)**-Standard vollständig implementiert, können **alle anderen KI-Agenten, Claude Desktop, Cursor, Cline, Windsurf und Cloud Coworker** ebenfalls ohne Anpassungen sofort und vollumfänglich damit arbeiten.
+
+---
+
+### 💬 Konkrete Abfrage-Beispiele (Prompts) für die KI
+
+Hier sind praxisnahe Beispiele, wie du deine KI (z. B. Hermes in Slack oder Claude im Chat) anweisen kannst, Aktionen auszuführen, und welche MCP-Tools im Hintergrund aufgerufen werden:
+
+#### 1. Zeiten buchen (Time Tracking)
+* **Abfrage**: *„Buche heute bitte 15 Minuten für das Projekt 'HC Consulting - SEO monatlich' mit der Beschreibung: Ermittlung Content-Strategie.“*
+  - **MCP-Tool**: `timeiq_time_create` (mit `start_time` und `end_time` oder `duration`).
+* **Abfrage**: *„Ich habe heute von 10:00 Uhr bis 11:30 Uhr an der Webseite gearbeitet. Trage das bitte ein.“*
+  - **MCP-Tool**: `timeiq_time_create` (berechnet automatisch die Dauer von 90 Minuten).
+* **Abfrage**: *„Lösche meinen Zeiteintrag mit der ID 44088.“*
+  - **MCP-Tool**: `timeiq_time_delete`.
+
+#### 2. Stoppuhr steuern (Stopwatch/Timer)
+* **Abfrage**: *„Starte eine Stoppuhr für das Projekt 'Marketing-Kampagne' und notiere als Thema 'Social Media Post erstellen'.“*
+  - **MCP-Tool**: `timeiq_timer_start`.
+* **Abfrage**: *„Wie lange läuft meine aktuelle Stoppuhr schon und woran arbeite ich gerade?“*
+  - **MCP-Tool**: `timeiq_timer_get`.
+* **Abfrage**: *„Ändere die Notiz meiner laufenden Stoppuhr zu 'Korrekturschleife mit Kunden'.“*
+  - **MCP-Tool**: `timeiq_timer_update` (führt ein flaches Update auf `updateTimeEntry` durch).
+* **Abfrage**: *„Ich bin fertig, stoppe die Stoppuhr und speichere die Zeit ab.“*
+  - **MCP-Tool**: `timeiq_timer_stop` (bucht die Zeit ein).
+* **Abfrage**: *„Brich die laufende Stoppuhr ab und verwirf die Zeit.“*
+  - **MCP-Tool**: `timeiq_timer_cancel` (löscht den laufenden Timer ohne Eintrag).
+
+#### 3. Projekte & Kunden verwalten
+* **Abfrage**: *„Zeige mir eine Liste aller unserer aktiven Projekte an.“*
+  - **MCP-Tool**: `timeiq_project_list` (mit Filter `active`).
+* **Abfrage**: *„Kannst du das Projekt 'Insurance Directory' bitte archivieren?“*
+  - **MCP-Tool**: `timeiq_project_archive` (ermittelt automatisch die ID und archiviert es sicher über den Bulk-Pfad).
+* **Abfrage**: *„Erstelle einen neuen Kunden namens 'ACME GmbH' und lege direkt ein Projekt 'Webdesign 2026' dafür an.“*
+  - **MCP-Tools**: `timeiq_client_create` gefolgt von `timeiq_project_create`.
+
+#### 4. Berichte & Analysen (Reports)
+* **Abfrage**: *„Erstelle einen Bericht für diese Woche und zeige mir die Summe der gebuchten Stunden.“*
+  - **MCP-Tool**: `timeiq_report_standard` (liefert übersichtliche Kennzahlen).
+* **Abfrage**: *„Suche nach all meinen Zeiteinträgen am heutigen Tag.“*
+  - **MCP-Tool**: `timeiq_report_search_time` (sucht mit dem doppelt verschachtelten Parameter-Objekt).
+* **Abfrage**: *„Gibt es Mitarbeiter, die diese Woche ihre Soll-Arbeitszeit noch nicht eingetragen haben?“*
+  - **MCP-Tool**: `timeiq_report_missing_time`.
+
+#### 5. Rechnungen & Ausgaben (Invoices & Expenses)
+* **Abfrage**: *„Zeige mir alle Rechnungen für den Kunden 'HC Consulting' aus diesem Jahr.“*
+  - **MCP-Tool**: `timeiq_invoice_list_for_client`.
+* **Abfrage**: *„Trage eine neue Ausgabe von 45 € für 'Bahn-Ticket' auf das Projekt 'SEO monatlich' ein.“*
+  - **MCP-Tool**: `timeiq_expense_create`.
+* **Abfrage**: *„Markiere die Rechnung Nr. RE-2026-004 als bezahlt.“*
+  - **MCP-Tool**: `timeiq_invoice_mark_paid` (bzw. über `timeiq_invoice_get_by_number` aufgelöst).
+
+#### 6. Stundenzettel (Timesheets) & System-Infos
+* **Abfrage**: *„Reiche meinen Stundenzettel für die aktuelle Periode zur Freigabe ein.“*
+  - **MCP-Tool**: `timeiq_timesheet_submit` (ermittelt automatisch die Periode und sendet sie ab).
+* **Abfrage**: *„Wer bin ich in TimeIQ und welche Berechtigungen habe ich?“*
+  - **MCP-Tool**: `timeiq_whoami` (ruft `/api/people/me` auf).
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### Requirements
