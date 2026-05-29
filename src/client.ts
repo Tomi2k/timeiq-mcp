@@ -161,7 +161,11 @@ async function request<T>(
         throw new TimeIQError(errMsg, response.status, errors);
       }
 
-      return (await response.json()) as T;
+      if (response.status === 204) {
+        return {} as T;
+      }
+      const text = await response.text();
+      return (text ? JSON.parse(text) : {}) as T;
     } catch (err: any) {
       if (err instanceof TimeIQError) {
         throw err;

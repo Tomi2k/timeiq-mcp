@@ -123,7 +123,16 @@ export const projectTools = {
     description: "Archive an active project (sets active to false).",
     inputSchema: ProjectGetInput,
     handler: async (args: z.infer<typeof ProjectGetInput>) => {
-      return client.put(`/api/projects/${args.slug}`, { active: false });
+      const res = await client.get<{ projects: any[] }>(`/api/projects/${args.slug}`);
+      const project = res.projects?.[0];
+      if (!project) {
+        throw new TimeIQError(`Project with slug '${args.slug}' not found.`, 404);
+      }
+      await client.put("/api/projects/actions/update", {
+        project_ids: [project.id],
+        changeset: { active: false }
+      });
+      return { success: true, project_id: project.id, slug: args.slug, active: false };
     },
   },
 
@@ -131,7 +140,16 @@ export const projectTools = {
     description: "Re-activate an archived project (sets active to true).",
     inputSchema: ProjectGetInput,
     handler: async (args: z.infer<typeof ProjectGetInput>) => {
-      return client.put(`/api/projects/${args.slug}`, { active: true });
+      const res = await client.get<{ projects: any[] }>(`/api/projects/${args.slug}`);
+      const project = res.projects?.[0];
+      if (!project) {
+        throw new TimeIQError(`Project with slug '${args.slug}' not found.`, 404);
+      }
+      await client.put("/api/projects/actions/update", {
+        project_ids: [project.id],
+        changeset: { active: true }
+      });
+      return { success: true, project_id: project.id, slug: args.slug, active: true };
     },
   },
 
@@ -142,7 +160,7 @@ export const projectTools = {
       if (args.ids.length > 50 && !args.confirm_bulk) {
         throw new TimeIQError(`Bulk action safety warning: Attempting to update ${args.ids.length} projects. Please pass confirm_bulk: true to proceed.`, 400);
       }
-      return client.put("/api/projects/actions/update", { ids: args.ids, changeset: args.changeset }, { dryRun: args.dry_run });
+      return client.put("/api/projects/actions/update", { project_ids: args.ids, changeset: args.changeset }, { dryRun: args.dry_run });
     },
   },
 

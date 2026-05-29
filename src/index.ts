@@ -90,7 +90,7 @@ async function getCachedMe() {
 const server = new Server(
   {
     name: "timeiq-mcp",
-    version: "1.3.3",
+    version: "1.3.4",
   },
   {
     capabilities: {
