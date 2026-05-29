@@ -1,17 +1,18 @@
 # TimeIQ-MCP — Audit Report & Resolution Log
 
 Repo: [Tomi2k/timeiq-mcp](https://github.com/Tomi2k/timeiq-mcp)
-Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.3.4** am 29. Mai 2026)
-Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung, Setup-Assistent, Slack-User-Mappen-Abstraktion sowie Projekt-Archiv-Fallbacks.
+Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.3.5** am 29. Mai 2026)
+Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung, Setup-Assistent, Slack-User-Mappen-Abstraktion, Projekt-Archiv-Fallbacks, Active-Timer-Updates und Search-Report-Verschachtelungen.
 
 ## TL;DR
-- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.3.4).
-- Alle 12+ auditierte Schwachstellen, Logikfehler und README-Abweichungen wurden vollständig korrigiert.
-- **NEU in v1.3.0:** Ein vollständig interaktiver Setup-Assistent (CLI-Wizard) zur Abfrage und Einrichtung der Konfigurationsvariablen (inklusive Slack Admin-ID und Coworker-Mappings).
-- **NEU in v1.3.3:** Abstraktion der Slack-ID-Auflösung, sodass Mappings flexibel auf TimeIQ E-Mail-Adressen, Benutzernamen, Slugs oder numerische IDs verweisen können.
-- **NEU in v1.3.4:** Behebung von Projekt-Archivierungs-Bugs in der TimeIQ API (Einzel-Updates werden nun über Bulk-Endpoints geroutet, `project_ids`-Keys korrigiert und leere 204 HTTP-Antworten sicher geparst).
-- TypeScript baut ohne Warnungen und mit strikten Typprüfungen (`tsc --noEmit` sauber).
-- Das gesamte Test-Suite läuft fehlerfrei (**35 von 35 Tests grün**).
+- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.3.5).
+- Alle 14+ auditierte Schwachstellen, Logikfehler und README-Abweichungen wurden vollständig korrigiert.
+- **NEU in v1.3.0:** Ein vollständig interaktiver Setup-Assistent (CLI-Wizard) zur Abfrage und Einrichtung der Konfigurationsvariablen.
+- **NEU in v1.3.3:** Abstraktion der Slack-ID-Auflösung (E-Mail, Username, Slug, numerische ID).
+- **NEU in v1.3.4:** Behebung von Projekt-Archivierungs-Bugs in der TimeIQ API (Bulk-Routing, 204 parsing).
+- **NEU in v1.3.5:** Behebung von Active-Timer-Update Routing 404 Fehlern (flache PUT Payloads über `updateTimeEntry`) und Search-Report Parameter-Verschachtelungen (doppelt geschachtelte Parameter-Objekte für `search/time` & `search/expenses`).
+- TypeScript baut ohne Warnungen und mit strikten Typprüfungen (`tsc` sauber).
+- Das gesamte E2E-Integrations-Test-Suite läuft zu 100% fehlerfrei (**34 von 34 Tests erfolgreich**).
 - Der Server wurde im Produktivbetrieb unter stdio-Transport und als NPM-Paket erfolgreich validiert.
 
 ---
