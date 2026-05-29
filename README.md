@@ -3,6 +3,10 @@
 [![NPM Version](https://img.shields.io/npm/v/timeiq-mcp.svg?style=flat-flat)](https://www.npmjs.com/package/timeiq-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> [!NOTE]
+> **Version 1.0**
+> Created by **Timothy Maximilian Scherman** ([www.timothyscherman.de](https://www.timothyscherman.de) / [www.schild-roth.com](https://www.schild-roth.com)) with the purpose of making agency life in the service and service-business area a bit easier, and equipping own AI agents with the ability to create time entries as well as automatically adding regularly recurring items via cron jobs.
+
 A production-ready, fully anonymized **Model Context Protocol (MCP)** server for TimeIQ time tracking. It provides a standard integration pattern that allows LLM agents (like Claude Desktop, Cursor, or custom gateway agents running on Hermes) to view and manage time entries, projects, clients, reports, invoices, expenses, services, and timesheets via a secure **stdio transport**.
 
 ---
