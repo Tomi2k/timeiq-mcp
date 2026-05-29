@@ -1,0 +1,37 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_folders/
+
+# Build outputs
+dist/
+out/
+build/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+vitest.log*
+
+# Lockfiles (optional but good to keep package-lock, ignore yarn-error.log)
+.pnpm-debug.log*
