@@ -38,7 +38,7 @@ This MCP setup was **primarily designed for integration with the Hermes agent (Z
 Here are concrete, real-world examples of natural language prompts you can give to your AI coworker (e.g. Hermes in Slack or Claude in Claude Desktop/Cursor), along with the corresponding MCP tools mapped under the hood:
 
 #### 1. Time Tracking
-* **Query**: *“Please book 15 minutes today on the project 'HC Consulting - SEO monatlich' with the description: Developing content strategy.”*
+* **Query**: *“Please book 15 minutes today on the project '[Client Name] - SEO monatlich' with the description: Developing content strategy.”*
   - **MCP Tool**: `timeiq_time_create` (using `start_time` and `end_time` or `duration` style).
 * **Query**: *“I worked on the website today from 10:00 AM to 11:30 AM. Please log that time.”*
   - **MCP Tool**: `timeiq_time_create` (automatically parses and converts the duration to 90 minutes).
@@ -74,7 +74,7 @@ Here are concrete, real-world examples of natural language prompts you can give 
   - **MCP Tool**: `timeiq_report_missing_time`.
 
 #### 5. Invoices & Expenses
-* **Query**: *“Show me all invoices for 'HC Consulting' from this year.”*
+* **Query**: *“Show me all invoices for '[Client Name]' from this year.”*
   - **MCP Tool**: `timeiq_invoice_list_for_client`.
 * **Query**: *“Log a new expense of 45 € for 'Train Ticket' on the project 'SEO monatlich'.”*
   - **MCP Tool**: `timeiq_expense_create`.
