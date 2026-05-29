@@ -44,16 +44,24 @@ export async function resolveSlackUser(requesting_slack_id?: string): Promise<an
     throw new TimeIQError("System Configuration Error: TIMEIQ_SLACK_MAP environment variable is not valid JSON.", 500);
   }
 
-  const email = map[requesting_slack_id];
-  if (!email) {
+  const mappedValue = map[requesting_slack_id];
+  if (!mappedValue) {
     throw new TimeIQError(`Security Policy Violation: Slack ID '${requesting_slack_id}' is not mapped to any TimeIQ account.`, 403);
   }
 
   const people = await getCachedPeople();
-  const person = people.find((p) => p.email && p.email.toLowerCase() === email.toLowerCase());
+  const searchVal = mappedValue.toLowerCase().trim();
+  const person = people.find((p) => {
+    const pEmail = p.email ? p.email.toLowerCase().trim() : "";
+    const pUsername = p.username ? p.username.toLowerCase().trim() : "";
+    const pSlug = p.slug ? p.slug.toLowerCase().trim() : "";
+    const pId = p.id ? String(p.id) : "";
+
+    return pEmail === searchVal || pUsername === searchVal || pSlug === searchVal || pId === searchVal;
+  });
 
   if (!person) {
-    throw new TimeIQError(`Security Policy Violation: Mapped email '${email}' not found in the TimeIQ directory.`, 404);
+    throw new TimeIQError(`Security Policy Violation: Mapped email, username, slug, or ID '${mappedValue}' not found in the TimeIQ directory.`, 404);
   }
 
   return person;

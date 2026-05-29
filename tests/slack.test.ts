@@ -46,14 +46,14 @@ describe("Slack Utilities & Security Policies", () => {
       );
     });
 
-    it("should throw if mapped email is not found in coworker directory", async () => {
+    it("should throw if mapped value is not found in coworker directory", async () => {
       config.TIMEIQ_SLACK_MAP = '{"U12345": "cara@domain.com"}';
       vi.mocked(client.get).mockResolvedValue({
         people: [{ id: 2, email: "emily@domain.com", slug: "emily" }],
       });
 
       await expect(resolveSlackUser("U12345")).rejects.toThrow(
-        "Security Policy Violation: Mapped email 'cara@domain.com' not found in the TimeIQ directory."
+        "Security Policy Violation: Mapped email, username, slug, or ID 'cara@domain.com' not found in the TimeIQ directory."
       );
     });
 
@@ -64,6 +64,45 @@ describe("Slack Utilities & Security Policies", () => {
         people: [
           expectedRecord,
           { id: 2, email: "emily@domain.com", slug: "emily" },
+        ],
+      });
+
+      const result = await resolveSlackUser("U12345");
+      expect(result).toEqual(expectedRecord);
+    });
+
+    it("should resolve correct coworker record by username", async () => {
+      config.TIMEIQ_SLACK_MAP = '{"U12345": "cara-username"}';
+      const expectedRecord = { id: 1, email: "cara@domain.com", username: "cara-username", slug: "cara" };
+      vi.mocked(client.get).mockResolvedValue({
+        people: [
+          expectedRecord,
+        ],
+      });
+
+      const result = await resolveSlackUser("U12345");
+      expect(result).toEqual(expectedRecord);
+    });
+
+    it("should resolve correct coworker record by slug", async () => {
+      config.TIMEIQ_SLACK_MAP = '{"U12345": "cara_slug"}';
+      const expectedRecord = { id: 1, email: "cara@domain.com", slug: "cara_slug" };
+      vi.mocked(client.get).mockResolvedValue({
+        people: [
+          expectedRecord,
+        ],
+      });
+
+      const result = await resolveSlackUser("U12345");
+      expect(result).toEqual(expectedRecord);
+    });
+
+    it("should resolve correct coworker record by ID", async () => {
+      config.TIMEIQ_SLACK_MAP = '{"U12345": "42"}';
+      const expectedRecord = { id: 42, email: "cara@domain.com", slug: "cara" };
+      vi.mocked(client.get).mockResolvedValue({
+        people: [
+          expectedRecord,
         ],
       });
 
