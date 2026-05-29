@@ -48,9 +48,9 @@ describe("Slack Utilities & Security Policies", () => {
 
     it("should throw if mapped email is not found in coworker directory", async () => {
       config.TIMEIQ_SLACK_MAP = '{"U12345": "cara@domain.com"}';
-      vi.mocked(client.get).mockResolvedValue([
-        { id: 2, email: "emily@domain.com", slug: "emily" },
-      ]);
+      vi.mocked(client.get).mockResolvedValue({
+        people: [{ id: 2, email: "emily@domain.com", slug: "emily" }],
+      });
 
       await expect(resolveSlackUser("U12345")).rejects.toThrow(
         "Security Policy Violation: Mapped email 'cara@domain.com' not found in the TimeIQ directory."
@@ -60,10 +60,12 @@ describe("Slack Utilities & Security Policies", () => {
     it("should resolve correct coworker record when matching email is found", async () => {
       config.TIMEIQ_SLACK_MAP = '{"U12345": "cara@domain.com"}';
       const expectedRecord = { id: 1, email: "cara@domain.com", slug: "cara" };
-      vi.mocked(client.get).mockResolvedValue([
-        expectedRecord,
-        { id: 2, email: "emily@domain.com", slug: "emily" },
-      ]);
+      vi.mocked(client.get).mockResolvedValue({
+        people: [
+          expectedRecord,
+          { id: 2, email: "emily@domain.com", slug: "emily" },
+        ],
+      });
 
       const result = await resolveSlackUser("U12345");
       expect(result).toEqual(expectedRecord);

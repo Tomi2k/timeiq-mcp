@@ -13,7 +13,8 @@ async function getCachedPeople(): Promise<any[]> {
   const now = Date.now();
   if (!peopleCache || (now - lastPeopleFetch > CACHE_TTL)) {
     try {
-      peopleCache = await client.get<any[]>("/api/people");
+      const res = await client.get<any>("/api/people");
+      peopleCache = res && Array.isArray(res.people) ? res.people : [];
       lastPeopleFetch = now;
     } catch (err: any) {
       throw new TimeIQError(`Failed to fetch coworker directory for validation: ${err.message}`, 500);
