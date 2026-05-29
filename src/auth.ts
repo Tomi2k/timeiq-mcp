@@ -55,9 +55,9 @@ export async function login(): Promise<string> {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          email: config.TIMEIQ_EMAIL,
+          username: config.TIMEIQ_EMAIL,
           password: config.TIMEIQ_PASSWORD,
-          remember: true,
+          rememberme: true,
         }),
         signal: AbortSignal.timeout(15000), // 15s timeout for login
       });
