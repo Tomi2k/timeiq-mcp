@@ -38,3 +38,7 @@ vitest.log*
 
 # Scratch files
 scratch_*
+
+# Initialization Reference Guide
+initialization.md
+
