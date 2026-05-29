@@ -17,6 +17,7 @@ const rawConfigSchema = z.object({
   }).min(1, "TIMEIQ_PASSWORD cannot be empty"),
   TIMEIQ_DEFAULT_TZ: z.string().default("Europe/Berlin"),
   TIMEIQ_LOG_LEVEL: z.enum(["info", "debug"]).default("info"),
+  TIMEIQ_SLACK_MAP: z.string().optional(),
   // TIMEIQ_DRY_RUN is safe-by-default. If not specified, it defaults to true.
   TIMEIQ_DRY_RUN: z.preprocess((val) => {
     if (val === undefined || val === "") return true;
@@ -40,6 +41,7 @@ interface AppConfig {
   TIMEIQ_PASSWORD: string;
   TIMEIQ_DEFAULT_TZ: string;
   TIMEIQ_LOG_LEVEL: "info" | "debug";
+  TIMEIQ_SLACK_MAP?: string;
   TIMEIQ_DRY_RUN: boolean;
 }
 
