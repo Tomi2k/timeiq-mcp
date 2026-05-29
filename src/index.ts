@@ -11,7 +11,8 @@ import { dirname, join } from "path";
 import fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { config } from "./config.js";
+import { config, isConfigValid, configErrors } from "./config.js";
+import readline from "readline";
 import { client, TimeIQError } from "./client.js";
 import { schemas } from "./schemas.js";
 
@@ -89,7 +90,7 @@ async function getCachedMe() {
 const server = new Server(
   {
     name: "timeiq-mcp",
-    version: "1.2.0",
+    version: "1.3.0",
   },
   {
     capabilities: {
@@ -242,6 +243,48 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 
 // Boot Stdio transport
 async function main() {
+  // Check if explicit setup is requested
+  if (process.argv.includes("setup") || process.argv.includes("--setup")) {
+    const { runSetup } = await import("./setup.js");
+    await runSetup();
+    return;
+  }
+
+  // Check if configuration validation failed
+  if (!isConfigValid) {
+    if (process.stdout.isTTY) {
+      console.error("\x1b[31m❌ Konfigurations-Validierung fehlgeschlagen:\x1b[0m");
+      configErrors.forEach((err) => {
+        console.error(`  - ${err}`);
+      });
+      
+      console.log("\n\x1b[33mEs wurden unvollständige Umgebungsvariablen gefunden.\x1b[0m");
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+      
+      const answer = await new Promise<string>((resolve) => {
+        rl.question("\x1b[1m\x1b[36mMöchtest du den interaktiven Setup-Assistenten jetzt starten? (j/n) [j]: \x1b[0m", (ans) => {
+          resolve(ans.trim().toLowerCase());
+        });
+      });
+      rl.close();
+
+      if (answer === "n" || answer === "nein" || answer === "no") {
+        console.log("Setup abgebrochen. Bitte konfiguriere die Umgebungsvariablen manuell.");
+        process.exit(1);
+      } else {
+        const { runSetup } = await import("./setup.js");
+        await runSetup();
+        return;
+      }
+    } else {
+      console.error("❌ Configuration validation failed:");
+      configErrors.forEach((err) => {
+        console.error(`  - ${err}`);
+      });
+      process.exit(1);
+    }
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("🚀 TimeIQ MCP server ready");

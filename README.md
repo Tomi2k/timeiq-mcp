@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > [!NOTE]
-> **Version 1.2**
+> **Version 1.3**
 > Created by **Timothy Maximilian Scherman** ([www.timothyscherman.de](https://www.timothyscherman.de) / [www.schild-roth.com](https://www.schild-roth.com)) with the purpose of making agency life in the service and service-business area a bit easier, and equipping own AI agents with the ability to create time entries as well as automatically adding regularly recurring items via cron jobs.
 
 A production-ready, fully anonymized **Model Context Protocol (MCP)** server for TimeIQ time tracking. It provides a standard integration pattern that allows LLM agents (like Claude Desktop, Cursor, or custom gateway agents running on Hermes) to view and manage time entries, projects, clients, reports, invoices, expenses, services, and timesheets via a secure **stdio transport**.
@@ -14,6 +14,7 @@ A production-ready, fully anonymized **Model Context Protocol (MCP)** server for
 ## 🚀 Key Features
 
 * **Anonymized & Secure by Design**: Zero hardcoded credentials or branding (no mentions of internal subdomains, private domains, or local credentials).
+* **Interactive Setup Wizard**: Run `npx timeiq-mcp setup` to automatically generate all env maps, define Slack admins/coworkers interactively, and get copy-paste ready config snippets.
 * **Safe-by-Default (Dry-Run)**: Defaults to `TIMEIQ_DRY_RUN=true` to prevent agents from inadvertently creating, modifying, or deleting entries. All modification requests describe the intended action without executing it.
 * **Bulk Action Gate**: Forces safety confirmation for multi-record operations.
 * **Complete Reverse-Engineered Coverage**: Exposes **50+ tools** and **3 read-only resources** spanning the entire TimeIQ SPA API.
@@ -27,6 +28,29 @@ A production-ready, fully anonymized **Model Context Protocol (MCP)** server for
 
 ### Requirements
 * Node.js **>= 20.0.0**
+
+### ⚡ Quick Interactive Setup Wizard (Recommended)
+
+To configure the server, map Slack User IDs to emails, and generate config blocks instantly, run the zero-dependency interactive setup CLI wizard:
+
+```bash
+npm run setup
+```
+or directly via:
+```bash
+npx timeiq-mcp setup
+```
+
+The wizard will guide you through:
+1. Entering your TimeIQ Tenant subdomain, email, and password.
+2. Specifying the **Admin Slack User ID** (which maps to your admin email).
+3. Sequentially adding as many coworker **Slack User IDs** and corresponding **TimeIQ Emails** as you want.
+4. Setting the default safety mode (Dry-run).
+
+Once completed, it will automatically:
+- Create/update a local `.env` file in the working directory.
+- Render copy-paste-ready config blocks for both **Claude Desktop** and **Hermes (config.yaml)**.
+- Display a clear role/user mapping table for verification.
 
 ### 1. Environment Variables
 

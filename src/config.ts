@@ -45,9 +45,19 @@ interface AppConfig {
   TIMEIQ_DRY_RUN: boolean;
 }
 
+export let isConfigValid = true;
+export let configErrors: string[] = [];
+
 if (!parsed.success) {
-  if (process.env.VITEST || process.env.TIMEIQ_TEST_MODE === "true") {
-    // Inject mock configurations for unit test execution
+  isConfigValid = false;
+  configErrors = parsed.error.errors.map((err) => `${err.path.join(".")}: ${err.message}`);
+
+  const isInteractiveSetup = process.argv.includes("setup") || 
+                             process.argv.includes("--setup") || 
+                             (process.stdout.isTTY && !process.env.VITEST && process.env.TIMEIQ_TEST_MODE !== "true");
+
+  if (process.env.VITEST || process.env.TIMEIQ_TEST_MODE === "true" || isInteractiveSetup) {
+    // Inject mock configurations for unit test execution or setup initialization to prevent startup crashes
     config = {
       TIMEIQ_TENANT: "testtenant",
       TIMEIQ_BASE_URL: "https://testtenant.timeiq.com",

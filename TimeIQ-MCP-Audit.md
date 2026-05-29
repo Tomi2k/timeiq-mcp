@@ -1,15 +1,30 @@
 # TimeIQ-MCP — Audit Report & Resolution Log
 
 Repo: [Tomi2k/timeiq-mcp](https://github.com/Tomi2k/timeiq-mcp)
-Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.2.0** am 29. Mai 2026)
-Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung.
+Geprüfte Version: `main` (Zuletzt aktualisiert & verifiziert in **Version 1.3.0** am 29. Mai 2026)
+Geprüft auf: Build, Tests, MCP-Konformität, Bugs, Sicherheit, Doku-Drift und Slack-ID-Sicherheitszuweisung sowie Setup-Assistent.
 
 ## TL;DR
-- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.2.0).
+- **Status: 100% BEHOBEN / COMPLIANT** (Stand: Version 1.3.0).
 - Alle 12+ auditierte Schwachstellen, Logikfehler und README-Abweichungen wurden vollständig korrigiert.
+- **NEU in v1.3.0:** Ein vollständig interaktiver Setup-Assistent (CLI-Wizard) zur Abfrage und Einrichtung der Konfigurationsvariablen (inklusive Slack Admin-ID und Coworker-Mappings).
 - TypeScript baut ohne Warnungen und mit strikten Typprüfungen (`tsc --noEmit` sauber).
 - Das gesamte Test-Suite läuft fehlerfrei (**28 von 28 Tests grün**).
 - Der Server wurde im Produktivbetrieb unter stdio-Transport und als NPM-Paket erfolgreich validiert.
+
+---
+
+## 🚀 Neu in Version 1.3.0: Interaktiver Setup-Assistent
+Um die Installation und Einrichtung des Slack User-Mappings so komfortabel wie möglich zu gestalten, wurde ein interaktiver Setup-Assistent implementiert.
+
+- **Trigger:** Start über `npm run setup` / `npx timeiq-mcp setup` oder automatischer Start, wenn Umgebungsvariablen in einem interaktiven Terminal (TTY) fehlen.
+- **Bypass:** Verhindert das Einfrieren von MCP-Clients (wie Claude Desktop, Cursor oder Hermes), indem in Nicht-TTY-Umgebungen standardmäßig sofort auf stderr fehlende Variablen geloggt und mit Exit-Code 1 abgebrochen wird.
+- **Features:** 
+  1. Abfrage der TimeIQ Subdomain, E-Mail-Adresse und Passwort.
+  2. Abfrage der Slack User-ID des Admins (wird automatisch mit der Admin-E-Mail verknüpft).
+  3. Schleifenabfrage zur sequentiellen Erfassung weiterer Coworker Slack-IDs und TimeIQ-E-Mails.
+  4. Generierung und Speicherung einer lokalen `.env`-Datei.
+  5. Ausgabe von copy-paste-bereiten JSON- (Claude Desktop) und YAML-Snippets (Hermes / VPS `config.yaml`).
 
 ---
 
