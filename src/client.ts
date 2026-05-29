@@ -51,7 +51,33 @@ async function request<T>(
   }
 
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  let url = `${config.TIMEIQ_BASE_URL}${cleanPath}`;
+  
+  // Globally encode dynamic path segments to prevent path injection and broken URLs (M1)
+  const staticKeys = new Set([
+    "api", "projects", "clients", "time", "people", "timer", "expenses", 
+    "expensetypes", "expensecategories", "services", "servicecategories", 
+    "timesheets", "timesheetperiods", "required_time", "notifications", 
+    "invoices", "lineitems", "settings", "billing_info", "bt", "import", 
+    "export", "actions", "action", "date", "invoice_number", "preferences", 
+    "managed", "archived", "signin", "signout", "forgotPassword", 
+    "resetPassword", "verifySecurityToken", "changePassword", 
+    "resendLoginInformation", "previous", "next", "dismiss", 
+    "missing_time_reminder", "timesheet_reminder", "paid", "unpaid", 
+    "writtenoff", "send", "timezones", "url", "token", "update", 
+    "delete", "updateTimeEntry", "batch", "standard", "classic", 
+    "classicTime", "custom", "period", "payroll", "recentActivity", 
+    "missingTime", "incompleteTime", "search"
+  ]);
+
+  const segments = cleanPath.split("/");
+  const encodedSegments = segments.map((seg) => {
+    if (!seg || staticKeys.has(seg.toLowerCase())) {
+      return seg;
+    }
+    return encodeURIComponent(seg);
+  });
+  const finalPath = encodedSegments.join("/");
+  let url = `${config.TIMEIQ_BASE_URL}${finalPath}`;
 
   if (query) {
     const params = new URLSearchParams();
@@ -72,6 +98,7 @@ async function request<T>(
 
   let attempt = 0;
   const maxRetries = 2; // exponential backoff up to twice
+  let hasRelogged = false;
   
   while (true) {
     try {
@@ -86,17 +113,18 @@ async function request<T>(
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(30000), // 30s timeout
       });
 
       // Handle 401 Unauthorized (attempt re-login exactly once)
       if (response.status === 401) {
-        if (attempt === 0) {
+        if (!hasRelogged) {
           if (config.TIMEIQ_LOG_LEVEL === "debug") {
             console.error("🔑 401 Unauthorized detected. Clearing cookie jar and re-logging in...");
           }
           cookieJar.clear();
           await login();
-          attempt++;
+          hasRelogged = true;
           continue;
         } else {
           throw new TimeIQError("Authentication session expired permanently", 401);
@@ -137,6 +165,14 @@ async function request<T>(
     } catch (err: any) {
       if (err instanceof TimeIQError) {
         throw err;
+      }
+      // If error has a structured HTTP status from auth login throw it directly
+      if (err.status && err.status > 0) {
+        throw new TimeIQError(err.message, err.status);
+      }
+      // Handle timeout specifically
+      if (err.name === "TimeoutError") {
+        throw new TimeIQError("Request timed out after 30 seconds", 0);
       }
       
       // Handle network errors (retry up to twice with exponential backoff)

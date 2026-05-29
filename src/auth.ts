@@ -5,10 +5,11 @@ class CookieJar {
 
   public update(setCookieHeaders: string[]) {
     for (const header of setCookieHeaders) {
-      const parts = header.split(";")[0]?.split("=");
-      if (parts && parts.length === 2) {
-        const key = parts[0]!.trim();
-        const value = parts[1]!.trim();
+      const firstPart = header.split(";")[0] || "";
+      const idx = firstPart.indexOf("=");
+      if (idx > 0) {
+        const key = firstPart.slice(0, idx).trim();
+        const value = firstPart.slice(idx + 1).trim();
         this.cookies.set(key, value);
       }
     }
@@ -58,6 +59,7 @@ export async function login(): Promise<string> {
           password: config.TIMEIQ_PASSWORD,
           remember: true,
         }),
+        signal: AbortSignal.timeout(15000), // 15s timeout for login
       });
 
       if (!response.ok) {
@@ -72,7 +74,9 @@ export async function login(): Promise<string> {
         } catch {
           // ignore parsing error
         }
-        throw new Error(errMsg);
+        const err = new Error(errMsg) as any;
+        err.status = response.status;
+        throw err;
       }
 
       // Capture Set-Cookie headers

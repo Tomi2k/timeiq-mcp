@@ -28,7 +28,7 @@ export const ServiceCategoryUpdateInput = z.object({
   dry_run: z.boolean().optional(),
 });
 
-export const expenseCategoryTools = {
+export const serviceTools = {
   // SERVICES
   timeiq_service_list: {
     description: "List active services (task types). Optional toggle to list archived services instead.",

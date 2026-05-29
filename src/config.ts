@@ -46,7 +46,7 @@ interface AppConfig {
 }
 
 if (!parsed.success) {
-  if (process.env.VITEST) {
+  if (process.env.VITEST || process.env.TIMEIQ_TEST_MODE === "true") {
     // Inject mock configurations for unit test execution
     config = {
       TIMEIQ_TENANT: "testtenant",

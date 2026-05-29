@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > [!NOTE]
-> **Version 1.0**
+> **Version 1.2**
 > Created by **Timothy Maximilian Scherman** ([www.timothyscherman.de](https://www.timothyscherman.de) / [www.schild-roth.com](https://www.schild-roth.com)) with the purpose of making agency life in the service and service-business area a bit easier, and equipping own AI agents with the ability to create time entries as well as automatically adding regularly recurring items via cron jobs.
 
 A production-ready, fully anonymized **Model Context Protocol (MCP)** server for TimeIQ time tracking. It provides a standard integration pattern that allows LLM agents (like Claude Desktop, Cursor, or custom gateway agents running on Hermes) to view and manage time entries, projects, clients, reports, invoices, expenses, services, and timesheets via a secure **stdio transport**.
@@ -19,6 +19,7 @@ A production-ready, fully anonymized **Model Context Protocol (MCP)** server for
 * **Complete Reverse-Engineered Coverage**: Exposes **50+ tools** and **3 read-only resources** spanning the entire TimeIQ SPA API.
 * **In-Memory Session Security**: Employs an in-memory session cookie jar (zero tokens or cookies are persisted to disk).
 * **Robust Timezone & Input Handling**: Strict date validation (prevents JS calendar rollover bugs like `2026-02-30` silently resolving to `March 2nd`) and automatic snake_case slugifiers that convert names with German diacritics and umlauts (e.g., `ä` → `ae`, `ß` → `ss`).
+* **Slack Member ID Mapping & Security**: Supports the `TIMEIQ_SLACK_MAP` environment variable to securely map Slack user IDs directly to individual coworker emails, ensuring hard user-level data ownership and action boundaries.
 
 ---
 
@@ -34,8 +35,9 @@ Configure the following environment variables. The server will validate them on 
 | Variable | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `TIMEIQ_TENANT` | `string` | **Required** | Your TimeIQ tenant subdomain (e.g., `company` in `company.timeiq.com`). |
-| `TIMEIQ_EMAIL` | `string` | **Required** | The acting user's email address. |
+| `TIMEIQ_EMAIL` | `string` | **Required** | The acting user's email address (or Admin service account). |
 | `TIMEIQ_PASSWORD` | `string` | **Required** | The acting user's password. |
+| `TIMEIQ_SLACK_MAP` | `string` | `undefined` | **Optional**. A JSON mapping of Slack user IDs to TimeIQ emails (e.g. `'{"U12345": "cara@domain.com"}'`) to enforce user boundaries. |
 | `TIMEIQ_DRY_RUN` | `boolean` | `true` | **Safety Mode**. If `true`, all mutating requests (POST, PUT, DELETE) are intercepted and simulated with mock success responses. Set to `false` to enable real writes. |
 
 ---
@@ -74,7 +76,7 @@ Add this to your `claude_desktop_config.json`:
      ```
 
 ### C. Hermes / Remote Gateway (Honcho / VPS)
-To integrate the server with remote gateway bots, register the tool inside the bots' local `.env` or `config.yaml` and boot:
+To integrate the server with remote gateway bots, register the tool inside the bots' local `config.yaml` and boot:
 ```yaml
 mcp:
   servers:
@@ -83,9 +85,10 @@ mcp:
       args: ["-y", "timeiq-mcp"]
       env:
         TIMEIQ_TENANT: "your-tenant"
-        TIMEIQ_EMAIL: "your-email@example.com"
-        TIMEIQ_PASSWORD: "your-password"
+        TIMEIQ_EMAIL: "admin-account@example.com"
+        TIMEIQ_PASSWORD: "secure-password"
         TIMEIQ_DRY_RUN: "false" # Set to false to allow actual actions
+        TIMEIQ_SLACK_MAP: '{"U12345678": "cara@example.com", "U87654321": "emily@example.com"}'
 ```
 
 ---
@@ -95,96 +98,137 @@ mcp:
 The server exposes modular tools mapped across **10 distinct domains**:
 
 ### 📅 1. Time & Timers (`time.ts`)
-* `timeiq_time_list`: List acting user's time entries in a date range.
-* `timeiq_time_list_for_person`: Admin only. Retrieve time entries for another user.
+* `timeiq_time_list_me`: List acting user's time entries in a date range. Defaults to today.
+* `timeiq_time_list_person`: Admin only. Retrieve time entries for another user.
 * `timeiq_time_create`: Create a time entry (supports both start/end time and duration style).
+* `timeiq_time_create_overbook`: Create a time entry with budget warnings.
 * `timeiq_time_update`: Update a single time entry using automatic changeset comparison.
 * `timeiq_time_delete`: Delete a single time entry.
-* `timeiq_time_delete_bulk`: Delete multiple time entries by ID list.
-* `timeiq_time_update_bulk`: Apply bulk updates to a list of time entries.
+* `timeiq_time_delete_many`: Delete multiple time entries by ID list.
+* `timeiq_time_update_many`: Apply bulk updates to a list of time entries.
 * `timeiq_time_batch`: Week-grid-style batch updates.
 * `timeiq_timer_get`: Get currently running stopwatch.
 * `timeiq_timer_start`: Start a new running timer.
 * `timeiq_timer_stop`: Stop running timer and convert to a time entry.
-* `timeiq_timer_update`: Update active timer notes/project.
 * `timeiq_timer_cancel`: Cancel active timer.
+* `timeiq_timer_update`: Update active timer notes/project.
+* `timeiq_timer_update_entry`: Update underlying entry of active timer.
 
 ### 🏢 2. Projects & Clients (`projects.ts`)
-* `timeiq_projects_list`: List active projects (includes budget & client details).
-* `timeiq_projects_list_managed`: List active projects the acting user manages.
-* `timeiq_projects_list_archived`: List archived projects.
-* `timeiq_projects_get`: Get single project details by slug.
-* `timeiq_projects_create`: Create a project (auto-slugifies names).
-* `timeiq_projects_update`: Update project attributes.
-* `timeiq_projects_update_bulk`: Update multiple projects in one call.
-* `timeiq_projects_delete`: Delete a project.
-* `timeiq_clients_list`: List active clients.
-* `timeiq_clients_list_managed`: List active managed clients.
-* `timeiq_clients_list_archived`: List archived clients.
-* `timeiq_clients_get`: Get client details by slug.
-* `timeiq_clients_create`: Create client.
-* `timeiq_clients_update`: Update client.
-* `timeiq_clients_delete`: Delete client.
+* `timeiq_project_list`: List projects. Can filter by active, archived, managed, or managed_archived.
+* `timeiq_project_get`: Get single project details by slug.
+* `timeiq_project_create`: Create a project (auto-slugifies names).
+* `timeiq_project_update`: Update project attributes.
+* `timeiq_project_update_many`: Update multiple projects in one call.
+* `timeiq_project_delete`: Delete a project.
+* `timeiq_project_archive`: Archive a project.
+* `timeiq_project_activate`: Re-activate an archived project.
+* `timeiq_client_list`: List clients. Can filter by active, archived, managed, or managed_archived.
+* `timeiq_client_get`: Get client details by slug.
+* `timeiq_client_create`: Create client.
+* `timeiq_client_update`: Update client.
+* `timeiq_client_delete`: Delete client.
+* `timeiq_client_archive`: Archive a client.
+* `timeiq_client_activate`: Re-activate an archived client.
 
 ### 👥 3. People & Capacity (`people.ts`)
-* `timeiq_people_list`: List active coworkers.
-* `timeiq_people_list_managed`: List active people managed by acting user.
-* `timeiq_people_list_archived`: List archived people.
-* `timeiq_people_get`: Get single coworker by slug.
-* `timeiq_people_create`: Create new person.
-* `timeiq_people_update`: Update person details.
-* `timeiq_people_delete`: Delete a person.
-* `timeiq_people_resend_invite`: Resend invite details to coworker.
-* `timeiq_capacity_get`: Get required time settings for a person.
-* `timeiq_capacity_set`: Set capacity values for a person.
+* `timeiq_whoami`: Get profile and settings of currently authenticated acting user.
+* `timeiq_person_list`: List team members. Can filter by active, archived, managed, or managed_archived.
+* `timeiq_person_get`: Get single team member by slug.
+* `timeiq_person_create`: Create new person (Admin only).
+* `timeiq_person_update`: Update person details (Admin only).
+* `timeiq_person_delete`: Delete a person (Admin only).
+* `timeiq_person_archive`: Archive a coworker.
+* `timeiq_person_activate`: Re-activate a coworker.
+* `timeiq_person_update_preferences`: Update own preferences.
+* `timeiq_person_required_time_get`: Get capacity settings for a person.
+* `timeiq_person_required_time_set`: Set capacity values for a person.
 
 ### 📊 4. Reports (`reports.ts`)
-* `timeiq_reports_standard`: Overview report (summary card data).
-* `timeiq_reports_standard_time`: Standard report time-tab entries.
-* `timeiq_reports_standard_expenses`: Standard report expenses.
-* `timeiq_reports_time`: Time summary totals & group-by breakdowns.
-* `timeiq_reports_time_entries`: Raw time entries matching filters.
-* `timeiq_reports_payroll`: Payroll summaries for staff.
-* `timeiq_reports_recent_activity`: Feed of latest changes.
-* `timeiq_reports_missing_time`: Discover users missing capacity entries.
+* `timeiq_report_standard`: Overview report (summary card data).
+* `timeiq_report_standard_time`: Standard report time-tab entries.
+* `timeiq_report_standard_expenses`: Standard report expenses.
+* `timeiq_report_time`: Time summary totals & group-by breakdowns.
+* `timeiq_report_time_detail`: Detailed time-entry report list.
+* `timeiq_report_expenses`: Summary expense report.
+* `timeiq_report_expenses_detail`: Detailed expense report list.
+* `timeiq_report_classic`: Classic summary report.
+* `timeiq_report_classic_time`: Classic time report.
+* `timeiq_report_custom`: Custom report with custom parameters.
+* `timeiq_report_period`: Period-aligned timesheet report.
+* `timeiq_report_payroll`: Payroll summaries for staff.
+* `timeiq_report_recent_activity`: Feed of latest changes.
+* `timeiq_report_missing_time`: Identify people missing capacity entries.
+* `timeiq_report_incomplete_time`: Identify people with incomplete times.
+* `timeiq_report_search_time`: Search across time entries.
+* `timeiq_report_search_expenses`: Search across expense entries.
 
 ### 💼 5. Expenses (`expenses.ts`)
-* `timeiq_expenses_list`: List logged expenses.
-* `timeiq_expenses_create`: Log new expense (travel, software, etc.).
-* `timeiq_expenses_update`: Update logged expense.
-* `timeiq_expenses_delete`: Delete expense.
-* `timeiq_expenses_delete_bulk`: Delete multiple expenses.
-* `timeiq_expenses_update_bulk`: Apply updates to multiple expenses.
-* `timeiq_expense_types_list`: List active expense categories.
-* `timeiq_expense_types_create`: Create expense category.
-* `timeiq_expense_types_update`: Update expense category.
-* `timeiq_expense_types_delete`: Delete expense category.
+* `timeiq_expense_list_me`: List expense entries for the acting user.
+* `timeiq_expense_list_person`: List expense entries for another user.
+* `timeiq_expense_create`: Log new expense (travel, software, etc.).
+* `timeiq_expense_update`: Update logged expense.
+* `timeiq_expense_delete`: Delete expense.
+* `timeiq_expense_delete_many`: Delete multiple expenses.
+* `timeiq_expense_update_many`: Apply updates to multiple expenses.
+* `timeiq_expense_type_list`: List expense types.
+* `timeiq_expense_type_get`: Get single expense type by slug.
+* `timeiq_expense_type_create`: Create expense type.
+* `timeiq_expense_type_update`: Update expense type.
+* `timeiq_expense_type_delete`: Delete expense type.
+* `timeiq_expense_type_archive`: Archive an expense type.
+* `timeiq_expense_type_activate`: Re-activate an expense type.
+* `timeiq_expense_category_list`: List expense categories.
+* `timeiq_expense_category_create`: Create expense category.
+* `timeiq_expense_category_update`: Update expense category.
+* `timeiq_expense_category_delete`: Delete expense category.
+* `timeiq_expense_category_archive`: Archive an expense category.
+* `timeiq_expense_category_activate`: Re-activate an expense category.
 
 ### 🏷️ 6. Services (`services.ts`)
-* `timeiq_services_list`: List billable services (tasks).
-* `timeiq_services_create`: Create billable service.
-* `timeiq_services_update`: Update service.
-* `timeiq_services_delete`: Delete service.
+* `timeiq_service_list`: List billable services (tasks).
+* `timeiq_service_create`: Create billable service.
+* `timeiq_service_update`: Update service.
+* `timeiq_service_delete`: Delete service.
+* `timeiq_service_archive`: Archive a service.
+* `timeiq_service_activate`: Re-activate a service.
+* `timeiq_service_category_list`: List service categories.
+* `timeiq_service_category_create`: Create service category.
+* `timeiq_service_category_update`: Update service category.
+* `timeiq_service_category_delete`: Delete service category.
+* `timeiq_service_category_archive`: Archive a service category.
+* `timeiq_service_category_activate`: Re-activate a service category.
 
 ### 🕒 7. Timesheets & Approvals (`timesheets.ts`)
-* `timeiq_timesheets_list`: List acting user's timesheets.
-* `timeiq_timesheets_get`: Get single timesheet details.
-* `timeiq_timesheets_submit`: Submit a timesheet period for approval.
-* `timeiq_timesheets_approve`: Approve a timesheet.
-* `timeiq_timesheets_decline`: Reject/decline a timesheet.
+* `timeiq_timesheet_period_list`: List all timesheet periods.
+* `timeiq_timesheet_period_by_date`: Get the timesheet period covering a specific date.
+* `timeiq_timesheet_period_get`: Get details for a single timesheet period by ID.
+* `timeiq_timesheet_list`: List timesheets for the acting user.
+* `timeiq_timesheet_get`: Get details for a single timesheet by ID.
+* `timeiq_timesheet_by_date`: Get the timesheet covering a specific date.
+* `timeiq_timesheet_with_issues`: List timesheets flagged with issues.
+* `timeiq_timesheet_neighbors`: Fetch neighbor timesheets.
+* `timeiq_timesheet_submit`: Submit a timesheet for review and approval.
+* `timeiq_timesheet_approve`: Approve a submitted timesheet (Manager/Admin only).
+* `timeiq_timesheet_decline`: Decline/reject a submitted timesheet (Manager/Admin only).
+* `timeiq_timesheet_send_reminder`: Trigger a missing timesheet submission email reminder.
 
 ### 🧾 8. Invoices (`invoices.ts`)
-* `timeiq_invoices_list`: List sent & draft invoices.
-* `timeiq_invoices_create`: Create a client invoice.
-* `timeiq_invoices_update`: Update invoice header.
-* `timeiq_invoices_delete`: Delete invoice.
-* `timeiq_invoices_set_paid`: Mark invoice as paid.
-* `timeiq_invoices_set_unpaid`: Revert invoice to unpaid.
-* `timeiq_invoices_set_written_off`: Mark invoice as written off.
-* `timeiq_invoices_send`: Email invoice to client.
-* `timeiq_lineitems_create`: Add line item to invoice.
-* `timeiq_lineitems_update`: Update invoice line item.
-* `timeiq_lineitems_delete`: Delete line item.
+* `timeiq_invoice_list`: List all invoices, optionally filtered by date range.
+* `timeiq_invoice_list_for_client`: List all invoices for a specific client.
+* `timeiq_invoice_get`: Get details of a single invoice by its ID.
+* `timeiq_invoice_get_by_number`: Get a single invoice by its alphanumeric invoice number.
+* `timeiq_invoice_create`: Create a new draft invoice.
+* `timeiq_invoice_update`: Update an invoice (e.g. details, dates, comments).
+* `timeiq_invoice_delete`: Delete an existing invoice by ID.
+* `timeiq_invoice_mark_paid`: Mark an invoice status as fully paid.
+* `timeiq_invoice_mark_unpaid`: Mark a paid or drafted invoice status as unpaid.
+* `timeiq_invoice_mark_written_off`: Mark an invoice status as written-off.
+* `timeiq_invoice_send`: Trigger the invoice-send email.
+* `timeiq_invoice_export`: Get invoice export/PDF compile details.
+* `timeiq_lineitem_add`: Add a new line item details row to an existing invoice.
+* `timeiq_lineitem_update`: Update a single line item details row on an invoice.
+* `timeiq_lineitem_delete`: Remove a line item details row from an invoice.
 
 ### 🔔 9. Notifications & Reminders (`notifications.ts`)
 * `timeiq_notifications_list`: Fetch active notifications.
@@ -215,15 +259,16 @@ When running in **Dry-Run mode** (`TIMEIQ_DRY_RUN=true`), any mutating operation
 
 ```json
 {
-  "dryRun": true,
-  "simulatedAction": "CREATE_TIME_ENTRY",
-  "data": {
-    "date": "2026-05-29",
-    "project_id": 2070,
-    "duration": 60,
-    "notes": "Testing the MCP Server safely",
-    "person_id": "[AUTHENTICATED_USER_ID]",
-    "id": 999999
+  "dry_run": true,
+  "request": {
+    "method": "POST",
+    "path": "/api/time",
+    "body": {
+      "date": "2026-05-29",
+      "project_id": 2070,
+      "duration": 60,
+      "notes": "Testing the MCP Server safely"
+    }
   }
 }
 ```

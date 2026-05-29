@@ -21,7 +21,7 @@ import { projectTools } from "./tools/projects.js";
 import { peopleTools } from "./tools/people.js";
 import { reportTools } from "./tools/reports.js";
 import { expenseTools } from "./tools/expenses.js";
-import { expenseCategoryTools as serviceTools } from "./tools/services.js";
+import { serviceTools } from "./tools/services.js";
 import { timesheetTools } from "./tools/timesheets.js";
 import { invoiceTools } from "./tools/invoices.js";
 import { notificationTools } from "./tools/notifications.js";
@@ -89,7 +89,7 @@ async function getCachedMe() {
 const server = new Server(
   {
     name: "timeiq-mcp",
-    version: "1.0.0",
+    version: "1.2.0",
   },
   {
     capabilities: {
