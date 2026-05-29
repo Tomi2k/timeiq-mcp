@@ -91,14 +91,19 @@ export const projectTools = {
     description: "Create a new project linked to a client.",
     inputSchema: ProjectCreateInput,
     handler: async (args: z.infer<typeof ProjectCreateInput>) => {
-      const body = {
+      const body: any = {
         name: args.name,
         client_id: args.client_id,
         is_billable: args.is_billable ?? true,
-        budget_type: args.budget_type ?? "none",
-        budget_total: args.budget_total ?? 0,
         active: args.active ?? true,
       };
+      if (args.budget_type && args.budget_type !== "none") {
+        let mappedType = args.budget_type as string;
+        if (args.budget_type === "hours") mappedType = "total_hours";
+        else if (args.budget_type === "money") mappedType = "total_billings";
+        body.budgetType = mappedType;
+        body.budgetTotal = args.budget_total ?? 0;
+      }
       return client.post("/api/projects", body, { dryRun: args.dry_run });
     },
   },

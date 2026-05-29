@@ -394,7 +394,7 @@ export const timeTools = {
           enforceUserOwnership(resolved, targetTimer.person_id);
         }
       }
-      return client.put(`/api/timer/${args.id}`, args.changeset, { dryRun: args.dry_run });
+      return client.put("/api/timer/actions/updateTimeEntry", { id: args.id, ...args.changeset }, { dryRun: args.dry_run });
     },
   },
 
@@ -410,7 +410,7 @@ export const timeTools = {
           enforceUserOwnership(resolved, targetTimer.person_id);
         }
       }
-      return client.put("/api/timer/actions/updateTimeEntry", { id: args.id, changeset: args.changeset }, { dryRun: args.dry_run });
+      return client.put("/api/timer/actions/updateTimeEntry", { id: args.id, ...args.changeset }, { dryRun: args.dry_run });
     },
   },
 };

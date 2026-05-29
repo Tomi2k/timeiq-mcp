@@ -35,3 +35,6 @@ vitest.log*
 
 # Lockfiles (optional but good to keep package-lock, ignore yarn-error.log)
 .pnpm-debug.log*
+
+# Scratch files
+scratch_*

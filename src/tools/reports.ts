@@ -152,7 +152,7 @@ export const reportTools = {
     description: "Perform filter search across all time entries.",
     inputSchema: ReportInputSchema,
     handler: async (args: z.infer<typeof ReportInputSchema>) => {
-      return client.post("/api/reports/search/time", buildReportBody(args));
+      return client.post("/api/reports/search/time", { parameters: buildReportBody(args) });
     },
   },
 
@@ -160,7 +160,7 @@ export const reportTools = {
     description: "Perform filter search across all expense entries.",
     inputSchema: ReportInputSchema,
     handler: async (args: z.infer<typeof ReportInputSchema>) => {
-      return client.post("/api/reports/search/expenses", buildReportBody(args));
+      return client.post("/api/reports/search/expenses", { parameters: buildReportBody(args) });
     },
   },
 };
